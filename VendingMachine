@@ -1,0 +1,205 @@
+#include<iostream>
+#include<stdlib.h>
+#include<string.h>
+#include<ctime>
+#include <fstream>
+#pragma warning(disable:4996)
+
+using namespace std;
+
+/*
+1. check all the food/drink that is inside the vending machine
+2. check their price
+3. calories tracking
+4. total price for every purchase
+5. list all the food/drink that need to be restocked if the capacity is less than 30%/40%
+*/
+
+struct SoftDrink {
+	char name[30];
+	float price, calories;
+	int qty;
+};
+
+void writeFile(SoftDrink drinks[10], int& option, int& purchaseQty, float& money) {
+	ofstream fout("purchaseOrder.txt");
+	time_t now = time(0);
+	char* dt = ctime(&now);
+	
+	fout << "---------------------------------------------------------\n";
+	fout << "                     PURCHASE ORDER\n";
+	fout << " ---------------------------------------------------------\n";
+	fout << " Susccessfully payment drinks : ";
+	fout << drinks[option-1].name << "\t" << "Qty : " << purchaseQty << "\n\n";
+	fout << " Total Price   : RM" << drinks[option - 1].price * purchaseQty << "\n";
+	fout << " Pay           : RM" << money << "\n";
+	fout << " Balance       : RM" << money - drinks[option - 1].price << "\n";
+	fout << " Purchase Time : " << dt << endl;
+	fout << " ---------------------------------------------------------\n";
+	cout << "\n -[ Successfully write into purchaseOrder.txtx file ! ]-\n";
+
+}
+
+//Array
+//Assign drinks value to array
+void initializeDrinks(SoftDrink drinks[10]) {
+	strcpy(drinks[0].name, "Cola"); drinks[0].price = 2.20; drinks[0].qty = 5; drinks[0].calories = 38;
+	strcpy(drinks[1].name, "Cold Cofee"); drinks[1].price = 2.50; drinks[1].qty = 20; drinks[1].calories = 10;
+	strcpy(drinks[2].name, "Lemon Lime"); drinks[2].price = 2.75; drinks[2].qty = 15; drinks[2].calories = 20;
+	strcpy(drinks[3].name, "Grape Soda"); drinks[3].price = 3.50; drinks[3].qty = 20; drinks[3].calories = 40;
+	strcpy(drinks[4].name, "Cream Soda"); drinks[4].price = 4.00; drinks[4].qty = 40; drinks[4].calories = 25;
+	strcpy(drinks[5].name, "Water"); drinks[5].price = 1.50; drinks[5].qty = 25; drinks[5].calories = 0;
+	strcpy(drinks[6].name, "Soda"); drinks[6].price = 2.30; drinks[6].qty = 26; drinks[6].calories = 30;
+	strcpy(drinks[7].name, "Diet Soda"); drinks[7].price = 4.00; drinks[7].qty = 15; drinks[7].calories = 15;
+	strcpy(drinks[8].name, "Iced Tea"); drinks[8].price = 4.00; drinks[8].qty = 20; drinks[8].calories = 18;
+	strcpy(drinks[9].name, "Lemonade"); drinks[9].price = 3.80; drinks[9].qty = 10; drinks[9].calories = 22;
+}
+
+//Menu that display drinks for customers to buy
+void drinksMenu(SoftDrink drinks[10]) {
+	cout << "\n\n====================================================================================\n";
+	cout << "\t\t\tWELCOME TO SMART VENDING MACHINE \n";
+	cout << "====================================================================================\n\n";
+	cout << "------------------------------------------------------------------------------------\n";
+	cout << "       Drink Name\t\tPrice \t\t\tQty\t\tCalories\n";
+	cout << "------------------------------------------------------------------------------------\n";
+	for (int i = 0; i < 10; i++) {
+		printf("%2d", i + 1);
+		cout << ") " << drinks[i].name << "\t\t\t" << drinks[i].price << "\t\t(" << drinks[i].qty << ") remaining" << "\t\t  " << drinks[i].calories << endl;
+	}
+	cout << "11) Leave the drink machine \n\n";
+	cout << "\n Choose one to purchase the drink (Press '11' to exit) :";
+}
+
+void receipt(SoftDrink drinks[10], int& option, int& purchaseQty, float& money) {
+	//Current date/time based on the system
+	time_t now = time(0);
+	char* dt = ctime(&now);
+	cout << "\n\n ---------------------------------------------------------\n";
+	cout << "                  RECEIPT         \n";
+	cout << " ---------------------------------------------------------\n";
+	cout << " Susccessfully payment drinks : ";
+	cout << drinks[option - 1].name << "\t" << "Qty : " << purchaseQty << "\n\n";
+	cout << " Total Price   : RM" << drinks[option - 1].price * purchaseQty << "\n";
+	cout << " Pay           : RM" << money << "\n";
+	cout << " Balance       : RM" << money - drinks[option - 1].price << "\n";
+	cout << " Purchase Time : " << dt << endl;
+	//Deduct the qty after payment
+	drinks[option - 1].qty -= purchaseQty;
+	cout << " ---------------------------------------------------------\n";
+	writeFile(drinks, option, purchaseQty, money);
+}
+
+void purchaseDrinks(SoftDrink drinks[10]) {
+	int option = 1;
+	while (true) {
+		drinksMenu(drinks);
+
+		//Validation to receive user input
+		while (!(cin >> option)) {
+			//Explain the error
+			cout << "\n -[ Invalid input. Please enter again ]- >> ";
+			//Clear previous input
+			cin.clear();
+			//Discard previous input
+			cin.ignore(123, '\n');
+		}
+
+		//If option==11 quit
+		if (option == 11)
+			break;
+		if (option <= 1 && option >= 11) {
+			cout << "\n-[ Invalid choice available. Please enter again ! ]-\n";
+		}
+		else {
+			int purchaseQty = 0;
+			cout << " Enter the purchase qty : ";
+			cin >> purchaseQty;
+			if (drinks[option - 1].qty == 0 || drinks[option - 1].qty < purchaseQty) {
+				cout << "\n-[ Insufficient drinks available. Please press 'Enter' to proceed\n";
+				getchar();
+				getchar();
+				continue;
+			}
+
+			if (option == 10) {
+				cout << "Thanks for using our drink machine !\n";
+			}
+
+			float money;
+			do {
+				cout << "\n -[ Total Price >> RM " << drinks[option - 1].price * purchaseQty << " ]- \n";
+				cout << "\n Enter amount of money to purchase the drink (RM) :";
+				cin >> money;
+				if (money < drinks[option - 1].price * purchaseQty) {
+					cout << "\n -[ Insufficient payment. Please pay again ! ]-";
+				}
+			} while (money < drinks[option - 1].price * purchaseQty);
+
+			receipt(drinks, option, purchaseQty, money);
+
+		}
+	}
+}
+
+void restockDrinks(SoftDrink drinks[10]) {
+	char option;
+	int restockQty;
+	cout << "\n\n ====================================================================================\n";
+	cout << "                  Drinks need to be restocked (<10 qty)         \n";
+	cout << " ====================================================================================\n";
+	for (int i = 0; i < 10; i++) {
+		if (drinks[i].qty < 10) {
+			cout << drinks[i].name << "\t\t\t" << drinks[i].price << "\t\t(" << drinks[i].qty << ") remaining" << "\t\t  " << drinks[i].calories << endl;
+			cout << "\n Do you want to restock ('Y'/'N') >> ";
+			cin >> option;
+			if (option == 'Y'|| option == 'y') {
+				cout << "\n Total Qty need to restock >> ";
+				cin >> restockQty;
+				drinks[i].qty += restockQty;
+				cout << "\n-[ Successfully restock !]- \n";
+			}
+			else if (option == 'N' || option == 'n') {
+				cout << "\n-[ Back To Menu ! ]-\n";
+			}
+			else {
+				cout << "\n-[ Invalid Choice ! ]-\n";
+			}
+		}
+	}
+}
+
+void mainMenu() {
+	SoftDrink drinks[10];//Array
+	//Assign drinks value
+	initializeDrinks(drinks);
+	int option = 0;
+	while (true) {
+		cout << "\n\n====================================================================================\n";
+		cout << "\t\t\tWELCOME TO SMART VENDING MACHINE \n";
+		cout << "====================================================================================\n\n";
+		cout << "\t\t 1. Purchase drinks \n";
+		cout << "\t\t 2. Check the drinks need to be restocked \n";
+		cout << "\t\t 3. Quit \n\n";
+		cout << "\t\t    Enter your choice >> ";
+		cin >> option;
+		if (option < 1 || option>3) {
+			cout << "\n\t\t -[ Invalid choice . Please enter again ! ]- \n";
+		}
+		//Exit loop
+		if (option == 3) {
+			exit(0);
+			break;
+		}
+
+		//If option =1 -> go purchase drinks func , elif 2 go restock 
+		option == 1 ? purchaseDrinks(drinks) : restockDrinks(drinks);
+	}
+
+}
+
+int main() {
+
+	mainMenu();
+
+}
